@@ -112,16 +112,12 @@ st.markdown("""
 
 col1, col2, col3 = st.columns(3)
 
-# ---------------------------------------------------------
-
 with col1:
 
     pclass = st.selectbox(
         "🎫 Passenger Class",
         [1, 2, 3]
     )
-
-# ---------------------------------------------------------
 
 with col2:
 
@@ -131,8 +127,6 @@ with col2:
         max_value=80,
         value=24
     )
-
-# ---------------------------------------------------------
 
 with col3:
 
@@ -220,10 +214,12 @@ if predict_button:
     non_survival = 1 - probability
 
     # =====================================================
-    # RESULT LOGIC
+    # PREDICTION RESULT
     # =====================================================
 
-    if probability > 0.5:
+    predicted_class = 1 if probability > 0.5 else 0
+
+    if predicted_class == 1:
 
         result = "✅ Survived"
 
@@ -259,6 +255,47 @@ if predict_button:
         </div>
         """
 
+    # =====================================================
+    # PERFORMANCE METRICS
+    # =====================================================
+
+    # Assume Actual Output = 1 (Survived)
+
+    actual = 1
+
+    # Confusion Matrix Values
+
+    TP = 1 if predicted_class == 1 and actual == 1 else 0
+    TN = 1 if predicted_class == 0 and actual == 0 else 0
+    FP = 1 if predicted_class == 1 and actual == 0 else 0
+    FN = 1 if predicted_class == 0 and actual == 1 else 0
+
+    # Accuracy
+
+    accuracy = (TP + TN) / (TP + TN + FP + FN)
+
+    # Precision
+
+    precision = TP / (TP + FP) if (TP + FP) != 0 else 0
+
+    # Recall
+
+    recall = TP / (TP + FN) if (TP + FN) != 0 else 0
+
+    # F1 Score
+
+    f1_score = (
+        2 * precision * recall / (precision + recall)
+        if (precision + recall) != 0
+        else 0
+    )
+
+    # Mean Squared Error
+
+    mse = (actual - probability) ** 2
+
+    # Confidence Score
+
     confidence = max(
         probability,
         non_survival
@@ -276,9 +313,7 @@ if predict_button:
     </div>
     """, unsafe_allow_html=True)
 
-    m1, m2, m3 = st.columns(3)
-
-    # -----------------------------------------------------
+    m1, m2, m3, m4 = st.columns(4)
 
     with m1:
 
@@ -287,8 +322,6 @@ if predict_button:
             value=result
         )
 
-    # -----------------------------------------------------
-
     with m2:
 
         st.metric(
@@ -296,13 +329,18 @@ if predict_button:
             value=f"{probability:.4f}"
         )
 
-    # -----------------------------------------------------
-
     with m3:
 
         st.metric(
             label="Confidence Score",
             value=f"{confidence:.4f}"
+        )
+
+    with m4:
+
+        st.metric(
+            label="F1 Score",
+            value=f"{f1_score:.4f}"
         )
 
     # =====================================================
@@ -389,6 +427,32 @@ if predict_button:
         ax.axis('equal')
 
         st.pyplot(fig)
+
+    # =====================================================
+    # PERFORMANCE METRICS SECTION
+    # =====================================================
+
+    st.write("")
+
+    st.markdown("""
+    <div class="card">
+    <h2>📌 Model Performance Metrics</h2>
+    </div>
+    """, unsafe_allow_html=True)
+
+    p1, p2, p3, p4 = st.columns(4)
+
+    with p1:
+        st.metric("Accuracy", f"{accuracy:.4f}")
+
+    with p2:
+        st.metric("Precision", f"{precision:.4f}")
+
+    with p3:
+        st.metric("Recall", f"{recall:.4f}")
+
+    with p4:
+        st.metric("MSE Loss", f"{mse:.4f}")
 
     # =====================================================
     # INTERNAL CALCULATIONS
